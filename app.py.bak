@@ -1,0 +1,225 @@
+import sys
+import os
+import logging
+import traceback
+from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
+import asyncio
+from functools import wraps
+import json
+import time
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Configure environment
+os.environ['PYTHONIOENCODING'] = 'utf-8'
+os.environ['PYTHONUNBUFFERED'] = '1'
+
+# Initialize Flask app
+app = Flask(__name__, 
+    template_folder='web_interface/templates',
+    static_folder='web_interface/static')
+
+# Configure CORS
+CORS(app)
+
+# Ensure responses are properly encoded
+app.json.compact = False
+app.json.sort_keys = False
+
+# Import core modules
+logger.info("Starting import process...")
+
+from core.monitoring import monitor
+
+try:
+    from core.translation import translator
+    logger.info("Translation module loaded")
+except Exception as e:
+    logger.error(f"Error loading translation module: {str(e)}")
+    translator = None
+    
+try:
+    from core.chat_engine import chat_processor
+    logger.info("Chat engine module loaded")
+except Exception as e:
+    logger.error(f"Error loading chat engine module: {str(e)}")
+    chat_processor = None
+    
+try:
+    from core.analysis import sentiment_analyzer
+    logger.info("Sentiment analyzer module loaded")
+except Exception as e:
+    logger.error(f"Error loading sentiment analyzer module: {str(e)}")
+    sentiment_analyzer = None
+
+logger.info("All imports completed")
+
+# Define routes
+@app.route('/metrics', methods=['GET'])
+def get_metrics():
+    """Get performance metrics for all services"""
+    try:
+        metrics = monitor.get_metrics()
+        return jsonify(metrics)
+    except Exception as e:
+        logger.error(f"Error getting metrics: {str(e)}")
+        return jsonify({'error': 'Failed to retrieve metrics'}), 500
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+def run_async(coro):
+    """Helper to run async code in sync context"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
+
+@app.route('/analyze', methods=['POST'])
+def analyze():
+    """Handle analysis requests"""
+    start_time = time.time()
+    logger.info("Received /analyze request")
+    
+    try:
+        data = request.get_json()
+        logger.debug(f"Request data: {data}")
+        
+        if not data:
+            logger.warning("No JSON data in request")
+            return jsonify({'error': 'No data provided'}), 400
+            
+        text = data.get('text', '')
+        if not text:
+            return jsonify({'error': 'No text provided'}), 400
+            
+        source_lang = data.get('source_lang', 'en')
+        target_lang = data.get('target_lang', 'hi')
+        
+        logger.info(f"Processing request: text='{text}', source_lang='{source_lang}', target_lang='{target_lang}'")
+        
+        async def process_all():
+            """Process all services concurrently"""
+            try:
+                # Create tasks for all services with monitoring
+                translation_task = translator.translate_text(
+                    text=text,
+                    target_lang=target_lang,
+                    source_lang=source_lang
+                ) if translator else {'translated_text': text, 'success': False, 'error': 'Translation service not available'}
+                
+                @monitor.track_time('sentiment')
+                async def run_sentiment():
+                    return await sentiment_analyzer.analyze_async(text) if hasattr(sentiment_analyzer, 'analyze_async') \
+                        else {'sentiment': 'NEUTRAL', 'score': 0.5, 'error': 'Sentiment analysis not available'}
+                
+                sentiment_task = run_sentiment()
+                chat_task = chat_processor.process_async(text) if hasattr(chat_processor, 'process_async') \
+                    else {'response': 'Chat service not available', 'success': False, 'error': 'Chat service not loaded'}
+                
+                # Wait for all tasks to complete
+                translated_result, sentiment_result, chat_result = await asyncio.gather(
+                    translation_task,
+                    sentiment_task,
+                    chat_task,
+                    return_exceptions=True
+                )
+                
+                # Process results and handle exceptions
+                if isinstance(translated_result, Exception):
+                    logger.error(f"Translation failed: {str(translated_result)}")
+                    translated_result = {
+                        'translated_text': text,
+                        'success': False,
+                        'error': str(translated_result)
+                    }
+                
+                if isinstance(sentiment_result, Exception):
+                    logger.error(f"Sentiment analysis failed: {str(sentiment_result)}")
+                    sentiment_result = {
+                        'sentiment': 'NEUTRAL',
+                        'score': 0.5,
+                        'success': False,
+                        'error': str(sentiment_result)
+                    }
+                
+                if isinstance(chat_result, Exception):
+                    logger.error(f"Chat processing failed: {str(chat_result)}")
+                    chat_result = {
+                        'response': "I apologize, but I'm having trouble processing your request at the moment.",
+                        'success': False,
+                        'error': str(chat_result)
+                    }
+                
+                return translated_result, sentiment_result, chat_result
+            except Exception as e:
+                logger.error(f"Error in process_all: {str(e)}")
+                return text, {'sentiment': 'NEUTRAL', 'score': 0.5}, "An error occurred while processing your request."
+        
+        # Run everything concurrently
+        translated, sentiment, response = run_async(process_all())
+            
+        end_time = time.time()
+        processing_time = end_time - start_time
+        
+        metrics = monitor.get_metrics()
+        response_data = {
+            'sentiment': {
+                'result': sentiment.get('sentiment'),
+                'score': sentiment.get('score'),
+                'success': sentiment.get('success', True),
+                'error': sentiment.get('error')
+            },
+            'translation': {
+                'text': translated.get('translated_text'),
+                'success': translated.get('success', True),
+                'error': translated.get('error'),
+                'source_lang': translated.get('source_lang'),
+                'target_lang': translated.get('target_lang')
+            },
+            'chat': {
+                'response': response.get('response'),
+                'success': response.get('success', True),
+                'error': response.get('error')
+            },
+            'performance': {
+                'total_time': f"{processing_time:.2f}s",
+                'translation_time': f"{metrics['translation']['average_time']:.2f}s",
+                'sentiment_time': f"{metrics['sentiment']['average_time']:.2f}s",
+                'chat_time': f"{metrics['chat']['average_time']:.2f}s"
+            }
+        
+        logger.info(f"Request processed in {processing_time:.2f}s")
+        logger.debug(f"Response data: {response_data}")
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
+        logger.error(f"Error processing request: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({
+            'error': 'An error occurred while processing your request',
+            'details': str(e)
+        }), 500
+
+if __name__ == '__main__':
+    try:
+        logger.info("Starting server...")
+        logger.info("Access the application at: http://127.0.0.1:8080")
+        app.run(host='127.0.0.1', port=8080, debug=True)
+    except Exception as e:
+        logger.error(f"Error starting server: {str(e)}")
+        logger.error(traceback.format_exc())
+

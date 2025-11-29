@@ -1,0 +1,16 @@
+0000000000000000000000000000000000000000 3a04f77333b9d444b84c76e1cb84734332e75c92 Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763825543 +0530	commit (initial): first commit
+3a04f77333b9d444b84c76e1cb84734332e75c92 0000000000000000000000000000000000000000 Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763825543 +0530	Branch: renamed refs/heads/master to refs/heads/main
+0000000000000000000000000000000000000000 3a04f77333b9d444b84c76e1cb84734332e75c92 Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763825543 +0530	Branch: renamed refs/heads/master to refs/heads/main
+3a04f77333b9d444b84c76e1cb84734332e75c92 ac67f12573c3a6d8df7d68135f3285c300e320a7 Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763825812 +0530	commit: first commit
+ac67f12573c3a6d8df7d68135f3285c300e320a7 0000000000000000000000000000000000000000 Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763825872 +0530	Branch: renamed refs/heads/main to refs/heads/main
+ac67f12573c3a6d8df7d68135f3285c300e320a7 ac67f12573c3a6d8df7d68135f3285c300e320a7 Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763825872 +0530	Branch: renamed refs/heads/main to refs/heads/main
+ac67f12573c3a6d8df7d68135f3285c300e320a7 0000000000000000000000000000000000000000 Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763826319 +0530	Branch: renamed refs/heads/main to refs/heads/main
+ac67f12573c3a6d8df7d68135f3285c300e320a7 ac67f12573c3a6d8df7d68135f3285c300e320a7 Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763826319 +0530	Branch: renamed refs/heads/main to refs/heads/main
+ac67f12573c3a6d8df7d68135f3285c300e320a7 0000000000000000000000000000000000000000 Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763826357 +0530	Branch: renamed refs/heads/main to refs/heads/main
+ac67f12573c3a6d8df7d68135f3285c300e320a7 ac67f12573c3a6d8df7d68135f3285c300e320a7 Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763826357 +0530	Branch: renamed refs/heads/main to refs/heads/main
+ac67f12573c3a6d8df7d68135f3285c300e320a7 9aaf6cab47d69fec1d9e39cc7ee436c44cae16f4 Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763826507 +0530	commit: Add .gitignore file for Python and Flask project
+9aaf6cab47d69fec1d9e39cc7ee436c44cae16f4 090fd89ed566341eccfb85993a3f9ed19d8ad27b Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763826926 +0530	commit: Remove .env file from tracking due to containing secrets
+090fd89ed566341eccfb85993a3f9ed19d8ad27b 9aaf6cab47d69fec1d9e39cc7ee436c44cae16f4 Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763827009 +0530	reset: moving to HEAD~1
+9aaf6cab47d69fec1d9e39cc7ee436c44cae16f4 ae8c6e626164e85e4beed6c2abd345bfd90826dd Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763827375 +0530	commit: Re-commit all project files after previous reset
+ae8c6e626164e85e4beed6c2abd345bfd90826dd 0000000000000000000000000000000000000000 Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763828518 +0530	Branch: renamed refs/heads/main to refs/heads/main
+ae8c6e626164e85e4beed6c2abd345bfd90826dd ae8c6e626164e85e4beed6c2abd345bfd90826dd Akash Deep Sarkar <akashdeepsarkar67@gmail.com> 1763828518 +0530	Branch: renamed refs/heads/main to refs/heads/main
